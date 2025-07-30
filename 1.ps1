@@ -1,5 +1,5 @@
 # Выполнение кода из буфера обмена
-
+iex (Get-Clipboard -Raw)
 Start-Sleep -Seconds 1
 
 # Красивый баннер

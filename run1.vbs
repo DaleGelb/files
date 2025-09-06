@@ -42,3 +42,4 @@ objShell.RegWrite "HKCU\Software\Microsoft\Windows\CurrentVersion\Run\MyNodeStar
 
 
 
+

